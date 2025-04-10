@@ -1,0 +1,211 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql" 
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  role_id    Int    @id @default(autoincrement())
+  role_name  String @unique @db.VarChar(50)
+  description String?
+  users      User[]
+}
+
+model User {
+  user_id    Int     @id @default(autoincrement())
+  username   String  @unique @db.VarChar(50)
+  password   String  @db.VarChar(255)
+  email      String  @unique @db.VarChar(100)
+  avatar     String? @db.VarChar(255)
+  role_id    Int
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  role        Role    @relation(fields: [role_id], references: [role_id])
+  profile     Profile?
+  videos      Video[]
+  livestreams LiveStream[]
+  comments    Comment[]
+  likes       Like[]
+  subscriptions Subscriptions[] @relation("Subscriber")
+  subscribers  Subscriptions[] @relation("SubscribedTo")
+  chatMessages ChatMessage[]
+  videoHistory VideoHistory[]
+  deposits     Deposit[]
+  donationsSent Donations[] @relation("Donor")
+  donationsReceived Donations[] @relation("Receiver")
+  notifications Notification[] @relation("UserNotifications")
+  sentNotifications Notification[] @relation("SentNotifications")
+}
+
+model Profile {
+  profile_id   Int      @id @default(autoincrement())
+  user_id      Int      @unique
+  name         String   @db.VarChar(100)
+  description  String?  @db.Text
+  banner_url   String?  @db.VarChar(255)
+  social_links Json?
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
+}
+
+model Video {
+  video_id     Int     @id @default(autoincrement())
+  user_id      Int
+  title        String  @db.VarChar(255)
+  description  String?
+  video_url    String  @db.VarChar(255)
+  thumbnail_url String? @db.VarChar(255)
+  duration     Int?
+  view_count   Int     @default(0)
+  upload_date  DateTime @default(now())
+
+  user        User    @relation(fields: [user_id], references: [user_id])
+  categories  VideoCategory[]
+  comments    Comment[]
+  likes       Like[]
+  history     VideoHistory[]
+}
+
+model LiveStream {
+  stream_id    Int     @id @default(autoincrement())
+  user_id      Int
+  title        String  @db.VarChar(255)
+  description  String?
+  stream_url   String  @db.VarChar(255)
+  start_time   DateTime
+  end_time     DateTime?
+  status       String  @default("scheduled") @db.VarChar(20)
+
+  user        User    @relation(fields: [user_id], references: [user_id])
+  chatMessages ChatMessage[]
+}
+
+model Category {
+  category_id  Int     @id @default(autoincrement())
+  name        String  @unique @db.VarChar(100)
+  description String?
+  videos      VideoCategory[]
+}
+
+model VideoCategory {
+  video_id    Int
+  category_id Int
+
+  video       Video   @relation(fields: [video_id], references: [video_id])
+  category    Category @relation(fields: [category_id], references: [category_id])
+
+  @@id([video_id, category_id])
+}
+
+model Comment {
+  comment_id  Int     @id @default(autoincrement())
+  user_id     Int
+  video_id    Int
+  comment_text String  @db.Text
+  created_at  DateTime @default(now())
+  parent_comment_id Int?
+
+  user       User   @relation(fields: [user_id], references: [user_id])
+  video      Video  @relation(fields: [video_id], references: [video_id])
+  parent     Comment? @relation("CommentToComment", fields: [parent_comment_id], references: [comment_id])
+  replies    Comment[] @relation("CommentToComment")
+}
+
+model Like {
+  like_id    Int     @id @default(autoincrement())
+  user_id    Int
+  video_id   Int
+  created_at DateTime @default(now())
+
+  user       User   @relation(fields: [user_id], references: [user_id])
+  video      Video  @relation(fields: [video_id], references: [video_id])
+
+  @@unique([user_id, video_id])
+}
+
+model Subscriptions {
+  subscription_id  Int    @id @default(autoincrement())
+  subscriber_id    Int
+  subscribed_to_id Int
+  created_at       DateTime @default(now())
+
+  subscriber    User @relation("Subscriber", fields: [subscriber_id], references: [user_id])
+  subscribedTo User @relation("SubscribedTo", fields: [subscribed_to_id], references: [user_id])
+
+  @@unique([subscriber_id, subscribed_to_id])
+}
+
+model ChatMessage {
+  message_id  Int     @id @default(autoincrement())
+  stream_id   Int
+  user_id     Int
+  message_text String  @db.Text
+  created_at  DateTime @default(now())
+
+  stream      LiveStream @relation(fields: [stream_id], references: [stream_id])
+  user        User       @relation(fields: [user_id], references: [user_id])
+}
+
+model VideoHistory {
+  history_id  Int     @id @default(autoincrement())
+  user_id     Int
+  video_id    Int
+  watched_at  DateTime @default(now())
+
+  user       User   @relation(fields: [user_id], references: [user_id])
+  video      Video  @relation(fields: [video_id], references: [video_id])
+}
+
+model Deposit {
+  deposit_id    Int     @id @default(autoincrement())
+  user_id       Int
+  amount        Decimal @db.Decimal(10,2)
+  payment_method String @db.VarChar(50)
+  deposit_date  DateTime @default(now())
+
+  user        User   @relation(fields: [user_id], references: [user_id])
+}
+
+model Donations {
+  donation_id   Int     @id @default(autoincrement())
+  donor_id      Int
+  receiver_id   Int
+  amount        Decimal @db.Decimal(10,2)
+  donation_date DateTime @default(now())
+  note          String?  @db.Text
+
+  donor        User   @relation("Donor", fields: [donor_id], references: [user_id])
+  receiver     User   @relation("Receiver", fields: [receiver_id], references: [user_id])
+}
+
+model NotificationType {
+  type_id    Int     @id @default(autoincrement())
+  name       String  @unique @db.VarChar(100)
+  description String?
+  
+  // Relation
+  notifications Notification[]
+}
+
+model Notification {
+  notification_id Int     @id @default(autoincrement())
+  user_id         Int
+  sender_id       Int?    // Nullable sender
+  type_id         Int
+  related_id      Int
+  message         String
+  is_read         Boolean @default(false)
+  created_at      DateTime @default(now())
+
+  // Relations
+  user    User @relation("UserNotifications", fields: [user_id], references: [user_id])
+  sender  User? @relation("SentNotifications", fields: [sender_id], references: [user_id])
+  type    NotificationType @relation(fields: [type_id], references: [type_id])
+}
+
