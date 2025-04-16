@@ -18,13 +18,15 @@ import {
 } from '@nestjs/swagger';
 import { CreateLikeDto } from '../../core/domain/dtos/like/create-like.dto';
 import { CreateCommentDto } from '../../core/domain/dtos/comment/create-comment.dto';
-import { CreateLikeUseCase } from '../../core/use-cases/interact/like/create-like.use-case';
-import { DeleteLikeUseCase } from '../../core/use-cases/interact/like/delete-like.use-case';
-import { GetLikesUseCase } from '../../core/use-cases/interact/like/get-likes.use-case';
-import { CreateCommentUseCase } from '../../core/use-cases/interact/comment/create-comment.use-case';
-import { UpdateCommentUseCase } from '../../core/use-cases/interact/comment/update-comment.use-case';
-import { DeleteCommentUseCase } from '../../core/use-cases/interact/comment/delete-comment.use-case';
-import { GetCommentsUseCase } from '../../core/use-cases/interact/comment/get-comments.use-case';
+import {
+  CreateLikeUseCase,
+  GetLikesUseCase,
+  DeleteLikeUseCase,
+  CreateCommentUseCase,
+  UpdateCommentUseCase,
+  DeleteCommentUseCase,
+  GetCommentsUseCase,
+} from '../../core/use-cases/interact/index';
 
 @ApiTags('Interactions')
 @ApiBearerAuth()

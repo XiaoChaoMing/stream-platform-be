@@ -9,26 +9,76 @@ This project strictly follows Clean Architecture principles with the following l
 ```
 src/
 ├── core/                     # Enterprise & Application Business Rules
-│   ├── domain/
-│   │   ├── entities/        # Business entities (User, Role, etc.)
+│   ├── domain/              # Enterprise Business Rules
+│   │   ├── entities/        # Business entities
 │   │   ├── repositories/    # Repository interfaces
 │   │   └── dtos/           # Data Transfer Objects
-│   │       ├── auth/       # Authentication DTOs
-│   │       └── user/       # User-related DTOs
-│   └── use-cases/          # Application business rules & services
+│   ├── use-cases/          # Application Business Rules
+│   │   ├── auth/          # Authentication use cases
+│   │   ├── user/          # User management use cases
+│   │   └── stream/        # Streaming use cases
+│   ├── filters/           # Global exception filters
+│   └── config/            # Application configuration
 │
 ├── infrastructure/          # Frameworks & Drivers
 │   ├── auth/              # Authentication implementation
 │   │   ├── guards/       # JWT & Role guards
 │   │   └── strategies/   # Passport strategies
-│   ├── repositories/     # Repository implementations
 │   ├── prisma/          # Database configuration & service
 │   └── websocket/       # WebSocket implementation
 │
 └── interface/            # Interface Adapters
     ├── controllers/     # HTTP Controllers
-    └── modules/        # NestJS modules
+    ├── gateways/       # WebSocket Gateways
+    ├── modules/        # NestJS modules
+    └── repositories/   # Repository implementations
 ```
+
+### Layer Responsibilities
+
+1. **Core Layer** (Enterprise & Application Business Rules)
+
+   - `domain/`: Contains enterprise business rules, entities, and interfaces
+   - `use-cases/`: Implements application-specific business rules
+   - `filters/`: Global exception handling
+   - `config/`: Application configuration and constants
+
+2. **Infrastructure Layer** (Frameworks & Drivers)
+
+   - `auth/`: Authentication implementation details
+   - `prisma/`: Database access and ORM configuration
+   - `websocket/`: Real-time communication implementation
+
+3. **Interface Layer** (Interface Adapters)
+   - `controllers/`: HTTP request handlers
+   - `gateways/`: WebSocket event handlers
+   - `modules/`: NestJS module definitions
+   - `repositories/`: Concrete implementations of repository interfaces
+
+### Clean Architecture Principles
+
+1. **Dependency Rule**
+
+   - Dependencies only point inward
+   - Inner layers have no knowledge of outer layers
+   - Outer layers depend on inner layers through interfaces
+
+2. **Separation of Concerns**
+
+   - Business logic is isolated in the core layer
+   - Framework-specific code is in the infrastructure layer
+   - Interface adapters handle external communication
+
+3. **Independence of Frameworks**
+
+   - Core business logic is framework-agnostic
+   - NestJS is treated as a delivery mechanism
+   - Database and external services are abstracted through interfaces
+
+4. **Testability**
+   - Business rules can be tested without external dependencies
+   - Use cases are isolated and independently testable
+   - Mock implementations can be easily substituted
 
 ## 🚀 Features
 
@@ -211,4 +261,4 @@ npm run test:cov
 
 This project is licensed under the MIT License.
 "# nestJs-clean-achitechture"
-"# stream-platform-be" 
+"# stream-platform-be"

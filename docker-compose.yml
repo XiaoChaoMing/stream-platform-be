@@ -1,0 +1,51 @@
+version: '3.8'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: stream-platform-api
+    ports:
+      - '3003:3000'
+    depends_on:
+      - mysql
+    environment:
+      - DATABASE_URL=mysql://root:xinhayquendi1@mysql:3306/stream-platform
+      - JWT_SECRET=taisaoanhconthuongemmai
+      - JWT_EXPIRATION_TIME=3600
+      - PORT=3000
+      - FRONTEND_URL=http://localhost:5173
+      - GOOGLE_CLIENT_ID=1495681916-4r7sjechs4fcnlilo5f008of3f7v6n0m.apps.googleusercontent.com
+      - GOOGLE_CLIENT_SECRET=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
+      - GOOGLE_CALLBACK_URL=http://localhost:3000/auth/google/callback
+      - FACEBOOK_CLIENT_ID=1813536099219484
+      - FACEBOOK_CLIENT_SECRET=09530ff093c46ef16e8a9d40ac171507
+      - FACEBOOK_CALLBACK_URL=http://localhost:3000/auth/facebook/callback
+    networks:
+      - stream-platform-network
+    volumes:
+      - ./src:/app/src
+      - ./prisma:/app/prisma
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    container_name: stream-platform-mysql
+    ports:
+      - '3307:3306'
+    environment:
+      - MYSQL_ROOT_PASSWORD=xinhayquendi1
+      - MYSQL_DATABASE=stream-platform
+    volumes:
+      - mysql-data:/var/lib/mysql
+    networks:
+      - stream-platform-network
+    restart: unless-stopped
+
+networks:
+  stream-platform-network:
+    driver: bridge
+
+volumes:
+  mysql-data:

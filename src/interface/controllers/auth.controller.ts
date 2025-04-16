@@ -119,7 +119,7 @@ export class AuthController {
       }
 
       return res.redirect(
-        `${process.env.FRONTEND_URL || 'http://localhost:3000'}?token=${token.access_token}`,
+        `${process.env.FRONTEND_URL}/auth/callback?token=${token.access_token}`,
       );
     } catch (error) {
       throw new InvalidCredentialsException(error);

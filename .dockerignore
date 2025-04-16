@@ -1,0 +1,27 @@
+# Git
+.git
+.gitignore
+
+# Node.js
+node_modules
+npm-debug.log
+pnpm-debug.log
+
+# Build output
+dist
+coverage
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# IDE
+.idea
+.vscode
+
+# Misc
+.DS_Store
+README.md
+*.md
+*.log 

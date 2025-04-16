@@ -17,10 +17,12 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../infrastructure/auth/guards/jwt-auth.guard';
-import { CreateVideoUseCase } from '../../core/use-cases/video/create-video.use-case';
-import { UpdateVideoUseCase } from '../../core/use-cases/video/update-video.use-case';
-import { DeleteVideoUseCase } from '../../core/use-cases/video/delete-video.use-case';
-import { GetVideoUseCase } from '../../core/use-cases/video/get-video.use-case';
+import {
+  CreateVideoUseCase,
+  GetVideoUseCase,
+  DeleteVideoUseCase,
+  UpdateVideoUseCase,
+} from '../../core/use-cases/video/index';
 import { CreateVideoDto } from '../../core/domain/dtos/video/create-video.dto';
 import { UpdateVideoDto } from '../../core/domain/dtos/video/update-video.dto';
 import { VideoResponseDto } from '../../core/domain/dtos/video/video-response.dto';

@@ -2,8 +2,11 @@ import { Controller, Post, Body, HttpStatus, Get } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiResponse } from '@nestjs/swagger';
 import { VideoCategory } from '../../core/domain/entities/video-categorys.entity';
 import { Category } from 'src/core/domain/entities/category.entity';
-import { CreateCategoryUseCase } from 'src/core/use-cases/category/create-category.use-case';
-import { GetAllCategoryUseCase } from 'src/core/use-cases/category/get-all-category.use-case';
+import {
+  CreateCategoryUseCase,
+  GetAllCategoryUseCase,
+} from 'src/core/use-cases/category/index';
+
 import { CreateCategoryDto } from 'src/core/domain/dtos/category/create-category.dto';
 
 @ApiTags('categories')
