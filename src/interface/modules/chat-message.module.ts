@@ -1,19 +1,35 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
-import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { WebSocketModule } from './websocket.module';
+import { ChatMessageGateway } from '../gateways/chat-message.gateway';
 import { ChatMessageRepository } from '../repositories/chat-message.repository';
+import {
+  CreateChatMessageUseCase,
+  FindChatMessageByIdUseCase,
+  FindChatMessagesByStreamIdUseCase,
+  FindChatMessagesByUserIdUseCase,
+  FindChatMessagesByStreamAndUserUseCase,
+  DeleteChatMessageUseCase,
+  DeleteAllChatMessagesByStreamIdUseCase,
+  DeleteAllChatMessagesByUserIdUseCase,
+} from '../../core/use-cases/chat-message';
 
 @Module({
-  imports: [PrismaModule],
-  controllers: [], // Add ChatMessageController when created
+  imports: [WebSocketModule],
   providers: [
-    PrismaService,
     {
       provide: 'IChatMessageRepository',
-      useClass: ChatMessageRepository, // Create this repository
+      useClass: ChatMessageRepository,
     },
-    // Add use cases when created
+    CreateChatMessageUseCase,
+    FindChatMessageByIdUseCase,
+    FindChatMessagesByStreamIdUseCase,
+    FindChatMessagesByUserIdUseCase,
+    FindChatMessagesByStreamAndUserUseCase,
+    DeleteChatMessageUseCase,
+    DeleteAllChatMessagesByStreamIdUseCase,
+    DeleteAllChatMessagesByUserIdUseCase,
+    ChatMessageGateway,
   ],
-  exports: ['IChatMessageRepository'],
+  exports: ['IChatMessageRepository', ChatMessageGateway],
 })
 export class ChatMessageModule {}

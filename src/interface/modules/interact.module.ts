@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
-import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { CommentRepository } from '../repositories/comment.repository';
 import { InteractController } from '../controllers/interact.controller';
 import { LikeRepository } from '../repositories/like.repository';
@@ -13,10 +11,9 @@ import { DeleteCommentUseCase } from 'src/core/use-cases/interact/comment/delete
 import { CreateCommentUseCase } from 'src/core/use-cases/interact/comment/create-comment.use-case';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [],
   controllers: [InteractController], // Add CommentController when created
   providers: [
-    PrismaService,
     {
       provide: 'ICommentRepository',
       useClass: CommentRepository, // Create this repository

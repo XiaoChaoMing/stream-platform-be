@@ -1,18 +1,33 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
-import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { LivestreamRepository } from '../repositories/livestream.repository';
+import { LivestreamController } from '../controllers/livestream.controller';
+import { 
+  CreateLivestreamUseCase,
+  FindLiveLivestreamsUseCase,
+  FindActiveLivestreamByUserUseCase,
+  FindLivestreamsByStatusUseCase,
+  FindLivestreamsByUserUseCase,
+  UpdateLivestreamStatusUseCase,
+  DeleteLivestreamUseCase,
+  DeleteAllLivestreamsByUserUseCase
+} from '../../core/use-cases/livestream';
 
 @Module({
-  imports: [PrismaModule],
-  controllers: [], // Add LivestreamController when created
+  imports: [],
+  controllers: [LivestreamController],
   providers: [
-    PrismaService,
     {
       provide: 'ILivestreamRepository',
-      useClass: LivestreamRepository, // Create this repository
+      useClass: LivestreamRepository,
     },
-    // Add use cases when created
+    CreateLivestreamUseCase,
+    FindLiveLivestreamsUseCase,
+    FindActiveLivestreamByUserUseCase,
+    FindLivestreamsByStatusUseCase,
+    FindLivestreamsByUserUseCase,
+    UpdateLivestreamStatusUseCase,
+    DeleteLivestreamUseCase,
+    DeleteAllLivestreamsByUserUseCase
   ],
   exports: ['ILivestreamRepository'],
 })

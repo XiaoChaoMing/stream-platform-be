@@ -11,7 +11,7 @@ class CustomIoAdapter extends IoAdapter {
     const server = super.createIOServer(port, {
       ...options,
       cors: {
-        origin: ['http://localhost:3000', 'http://localhost'],
+        origin: ['http://localhost:3000', 'http://localhost:3003'],
         methods: ['GET', 'POST'],
         credentials: true,
       },

@@ -4,10 +4,9 @@ import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { NotificationRepository } from '../repositories/notification.repository';
 
 @Module({
-  imports: [PrismaModule],
+  imports: [],
   controllers: [], // Add NotificationController when created
   providers: [
-    PrismaService,
     {
       provide: 'INotificationRepository',
       useClass: NotificationRepository, // Create this repository

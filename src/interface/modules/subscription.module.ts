@@ -1,18 +1,25 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
-import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { SubscriptionController } from '../controllers/subscription.controller';
 import { SubscriptionRepository } from '../repositories/subscription.repository';
+import {
+  CreateSubscriptionUseCase,
+  FindSubscriptionsBySubscriberUseCase,
+  FindSubscriptionsBySubscribedToUseCase,
+  DeleteSubscriptionUseCase,
+} from '../../core/use-cases/subscription';
 
 @Module({
-  imports: [PrismaModule],
-  controllers: [], // Add SubscriptionController when created
+  imports: [],
+  controllers: [SubscriptionController],
   providers: [
-    PrismaService,
     {
       provide: 'ISubscriptionRepository',
-      useClass: SubscriptionRepository, // Create this repository
+      useClass: SubscriptionRepository,
     },
-    // Add use cases when created
+    CreateSubscriptionUseCase,
+    FindSubscriptionsBySubscriberUseCase,
+    FindSubscriptionsBySubscribedToUseCase,
+    DeleteSubscriptionUseCase,
   ],
   exports: ['ISubscriptionRepository'],
 })

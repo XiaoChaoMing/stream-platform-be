@@ -1,18 +1,25 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
-import { PrismaService } from '../../infrastructure/prisma/prisma.service';
+import { DepositController } from '../controllers/deposit.controller';
 import { DepositRepository } from '../repositories/deposit.repository';
+import {
+  CreateDepositProfileUseCase,
+  AddFundsUseCase,
+  WithdrawFundsUseCase,
+  GetBalanceUseCase,
+} from '../../core/use-cases/deposit';
 
 @Module({
-  imports: [PrismaModule],
-  controllers: [], // Add DepositController when created
+  imports: [],
+  controllers: [DepositController],
   providers: [
-    PrismaService,
     {
       provide: 'IDepositRepository',
-      useClass: DepositRepository, // Create this repository
+      useClass: DepositRepository,
     },
-    // Add use cases when created
+    CreateDepositProfileUseCase,
+    AddFundsUseCase,
+    WithdrawFundsUseCase,
+    GetBalanceUseCase,
   ],
   exports: ['IDepositRepository'],
 })

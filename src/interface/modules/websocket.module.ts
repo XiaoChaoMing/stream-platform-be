@@ -4,6 +4,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { SocketProvider } from '../../infrastructure/websocket/socket.provider';
 import { WsAuthGuard } from '../../infrastructure/auth/guards/ws-auth.guard';
 
+
 @Module({
   imports: [
     JwtModule.registerAsync({
@@ -17,7 +18,7 @@ import { WsAuthGuard } from '../../infrastructure/auth/guards/ws-auth.guard';
       inject: [ConfigService],
     }),
   ],
-  providers: [SocketProvider, WsAuthGuard],
+  providers: [SocketProvider, WsAuthGuard,],
   exports: [SocketProvider, WsAuthGuard],
 })
 export class WebSocketModule {}

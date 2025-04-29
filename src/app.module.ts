@@ -10,7 +10,12 @@ import { CategoryModule } from './interface/modules/category.module';
 import { VideoModule } from './interface/modules/video.module';
 import { InteractModule } from './interface/modules/interact.module';
 import { ConfigModule } from '@nestjs/config';
+import { LivestreamModule } from './interface/modules/livestream.module';
 import { WebSocketModule } from './interface/modules/websocket.module';
+import { ChatMessageModule } from './interface/modules/chat-message.module';
+import { DepositModule } from './interface/modules/deposit.module';
+import { SubscriptionModule } from './interface/modules/subscription.module';
+
 
 @Module({
   imports: [
@@ -26,6 +31,10 @@ import { WebSocketModule } from './interface/modules/websocket.module';
     CategoryModule,
     InteractModule,
     WebSocketModule,
+    LivestreamModule,
+    ChatMessageModule,
+    DepositModule,
+    SubscriptionModule,
   ],
   providers: [AppService],
 })

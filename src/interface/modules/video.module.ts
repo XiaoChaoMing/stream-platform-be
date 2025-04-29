@@ -1,25 +1,26 @@
 import { Module } from '@nestjs/common';
-import { PrismaModule } from '../../infrastructure/prisma/prisma.module';
 import { VideoRepository } from '../repositories/video.repository';
 import { VideoController } from '../controllers/video.controller';
 import { CreateVideoUseCase } from 'src/core/use-cases/video/create-video.use-case';
 import { GetVideoUseCase } from 'src/core/use-cases/video/get-video.use-case';
 import { UpdateVideoUseCase } from 'src/core/use-cases/video/update-video.use-case';
 import { DeleteVideoUseCase } from 'src/core/use-cases/video/delete-video.use-case';
+import { IncrementViewCountGateway } from '../gateways/increment-view-count.gateway';
+import { WebSocketModule } from './websocket.module';
 
 @Module({
-  imports: [PrismaModule],
-  controllers: [VideoController], // Add VideoController when created
+  imports: [ WebSocketModule],
+  controllers: [VideoController],
   providers: [
     {
       provide: 'IVideoRepository',
-      useClass: VideoRepository, // Create this repository
+      useClass: VideoRepository,
     },
     CreateVideoUseCase,
     GetVideoUseCase,
     UpdateVideoUseCase,
     DeleteVideoUseCase,
-    // Add use cases when created
+    IncrementViewCountGateway,
   ],
   exports: ['IVideoRepository'],
 })

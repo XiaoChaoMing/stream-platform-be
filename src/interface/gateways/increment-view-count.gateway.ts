@@ -9,7 +9,6 @@ export class IncrementViewCountGateway implements OnModuleInit {
   constructor(
     @Inject('IVideoRepository')
     private readonly videoRepository: IVideoRepository,
-    @Inject('SocketProvider')
     private readonly socketProvider: SocketProvider,
   ) {}
 
@@ -59,7 +58,7 @@ export class IncrementViewCountGateway implements OnModuleInit {
   async handleGetViewCount(videoId: number): Promise<void> {
     try {
       const video = await this.videoRepository.findById(videoId);
-
+      
       if (!video) {
         this.socketProvider.emitToAll('getVideoViewCountResponse', {
           status: 'error',
