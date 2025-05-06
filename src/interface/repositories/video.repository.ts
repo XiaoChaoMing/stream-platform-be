@@ -9,12 +9,26 @@ import { UpdateVideoDto } from '../../core/domain/dtos/video/update-video.dto';
 export class VideoRepository implements IVideoRepository {
   constructor(private prisma: PrismaService) {}
 
-  async create(data: CreateVideoDto): Promise<Video> {
+  async create(data: {
+    user_id: number;
+    title: string;
+    description?: string;
+    video_url: string;
+    thumbnail_url?: string;
+    duration?: number;
+    view_count: number;
+    upload_date: Date;
+  }): Promise<Video> {
     return this.prisma.video.create({
       data: {
-        ...data,
-        view_count: 0,
-        upload_date: new Date(),
+        user_id: data.user_id,
+        title: data.title,
+        description: data.description,
+        video_url: data.video_url,
+        thumbnail_url: data.thumbnail_url,
+        duration: data.duration,
+        view_count: data.view_count,
+        upload_date: data.upload_date,
       },
     });
   }

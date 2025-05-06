@@ -78,6 +78,8 @@ model LiveStream {
   title        String  @db.VarChar(255)
   description  String?
   stream_url   String  @db.VarChar(255)
+  view_count   Int     @default(0)
+  thumbnail_url String?  @db.VarChar(255) 
   start_time   DateTime
   end_time     DateTime?
   status       String  @default("scheduled") @db.VarChar(20)

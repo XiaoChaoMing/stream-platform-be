@@ -36,12 +36,11 @@ async function bootstrap() {
     allowedHeaders: 'Content-Type, Accept, Authorization',
   });
 
-  // Validation pipe
+  // Enable global ValidationPipe with transform option
   app.useGlobalPipes(
     new ValidationPipe({
-      whitelist: true,
       transform: true,
-      forbidNonWhitelisted: true,
+      whitelist: true,
     }),
   );
 

@@ -12,6 +12,7 @@ interface OAuthUser {
   email: string;
   role: string | number;
   accessToken?: string;
+  avatar: string;
 }
 
 @Injectable()
@@ -41,6 +42,7 @@ export class AuthService {
       user: {
         id: user.user_id,
         username: user.username,
+        avatar: user.avatar,
         email: user.email,
         role: user.role_id,
       },
@@ -94,6 +96,7 @@ export class AuthService {
         id: user.id,
         username: user.username,
         email: user.email,
+        avatar: user.avatar,
         role:
           typeof user.role === 'string' ? parseInt(user.role, 10) : user.role,
       },

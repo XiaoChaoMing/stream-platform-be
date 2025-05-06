@@ -24,4 +24,10 @@ export class UserPayloadDto {
     description: 'The role ID of the user',
   })
   role_id: number;
+
+  @ApiProperty({
+    example: 'https://example.com/avatar.png',
+    description: 'The avatar of the user',
+  })
+  avatar: string;
 }

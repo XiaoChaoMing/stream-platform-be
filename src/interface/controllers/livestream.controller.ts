@@ -15,6 +15,7 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiBody,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../infrastructure/auth/guards/jwt-auth.guard';
 import {
@@ -34,6 +35,8 @@ import {
   ValidationException,
   DomainException,
 } from '../../core/filters/exceptions/domain.exception';
+import { UpdateLivestreamDto } from 'src/core/domain/dtos/livestream/update-livestream.dto';
+import { UpdateLivestreamStatusDto } from 'src/core/domain/dtos/livestream/update-livestream-status.dto';
 
 @ApiTags('Livestreams')
 @Controller('livestreams')
@@ -223,24 +226,16 @@ export class LivestreamController {
     description: 'Livestream status updated successfully',
     type: LivestreamResponseDto,
   })
-  @ApiResponse({
-    status: HttpStatus.NOT_FOUND,
-    description: 'Livestream not found',
-  })
-  @ApiResponse({
-    status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid input data',
-  })
-  @ApiResponse({
-    status: HttpStatus.UNAUTHORIZED,
-    description: 'Unauthorized access',
-  })
+  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Livestream not found' })
+  @ApiResponse({ status: HttpStatus.BAD_REQUEST, description: 'Invalid input data' })
+  @ApiResponse({ status: HttpStatus.UNAUTHORIZED, description: 'Unauthorized access' })
+  @ApiBody({ type: UpdateLivestreamStatusDto })
   async updateLivestreamStatus(
     @Param('id', ParseIntPipe) id: number,
-    @Body('status') status: 'scheduled' | 'live' | 'ended',
+    @Body() statusDto: UpdateLivestreamStatusDto,
   ): Promise<LivestreamResponseDto> {
     try {
-      const updatedLivestream = await this.updateLivestreamStatusUseCase.execute(id, status);
+      const updatedLivestream = await this.updateLivestreamStatusUseCase.execute(id, statusDto.status);
       if (!updatedLivestream) {
         throw new EntityNotFoundException(`Livestream with ID ${id} not found`);
       }

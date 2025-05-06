@@ -15,6 +15,7 @@ import { WebSocketModule } from './interface/modules/websocket.module';
 import { ChatMessageModule } from './interface/modules/chat-message.module';
 import { DepositModule } from './interface/modules/deposit.module';
 import { SubscriptionModule } from './interface/modules/subscription.module';
+import { MinioModule } from './infrastructure/minio/minio.module';
 
 
 @Module({
@@ -35,6 +36,7 @@ import { SubscriptionModule } from './interface/modules/subscription.module';
     ChatMessageModule,
     DepositModule,
     SubscriptionModule,
+    MinioModule,
   ],
   providers: [AppService],
 })

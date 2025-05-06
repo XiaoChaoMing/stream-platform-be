@@ -1,4 +1,4 @@
-version: '3.8'
+
 
 services:
   api:
@@ -10,15 +10,21 @@ services:
       - '3003:3000'
     depends_on:
       - mysql
+      - minio
     environment:
-      - DATABASE_URL=mysql://root:${MYSQL_ROOT_PASSWORD}@mysql:3306/stream-platform
-      - JWT_SECRET=${JWT_SECRET}
+      - DATABASE_URL=mysql://root:xinhayquendi1@mysql:3306/stream-platform
+      - JWT_SECRET=taisaoanhconthuongemmai
       - JWT_EXPIRATION_TIME=3600
       - PORT=3000
       - FRONTEND_URL=https://fe.streamify.id.vn
-      - GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-      - GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+      - GOOGLE_CLIENT_ID=596808080807-eaec2bc0e65k0ngfu98snebd013gd4kp.apps.googleusercontent.com
+      - GOOGLE_CLIENT_SECRET=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
       - GOOGLE_CALLBACK_URL=https://be-api.streamify.id.vn/auth/google/callback
+      - MINIO_ENDPOINT=minio
+      - MINIO_PORT=9000
+      - MINIO_ACCESS_KEY=sCwqBkB2XoR250rS8zIP
+      - MINIO_SECRET_KEY=IpJxEcU0TMBH4CcL5wqICW0B1W6TcbVBWcDD5Mj5
+      - MINIO_BUCKET=stream-platform
     networks:
       - stream-platform-network
     volumes:
@@ -32,10 +38,26 @@ services:
     ports:
       - '3307:3306'
     environment:
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=xinhayquendi1
       - MYSQL_DATABASE=stream-platform
     volumes:
       - mysql-data:/var/lib/mysql
+    networks:
+      - stream-platform-network
+    restart: unless-stopped
+
+  minio:
+    image: minio/minio:latest
+    container_name: stream-platform-minio
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    volumes:
+      - minio-data:/data
+    command: server --console-address ':9001' /data
     networks:
       - stream-platform-network
     restart: unless-stopped
@@ -46,3 +68,4 @@ networks:
 
 volumes:
   mysql-data:
+  minio-data:

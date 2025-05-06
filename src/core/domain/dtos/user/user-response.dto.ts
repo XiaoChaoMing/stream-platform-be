@@ -1,5 +1,4 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { Exclude } from 'class-transformer';
 
 export class UserResponseDto {
   @ApiProperty({
@@ -20,9 +19,6 @@ export class UserResponseDto {
   })
   username: string;
 
-  @Exclude()
-  password: string;
-
   @ApiProperty({
     example: 1,
     description: 'The role ID of the user',
@@ -35,18 +31,6 @@ export class UserResponseDto {
     required: false,
   })
   avatar?: string;
-
-  @ApiProperty({
-    example: '2024-03-26T10:00:00Z',
-    description: 'The timestamp when the user was created',
-  })
-  created_at: Date;
-
-  @ApiProperty({
-    example: '2024-03-26T10:00:00Z',
-    description: 'The timestamp when the user was last updated',
-  })
-  updated_at: Date;
 
   constructor(partial: Partial<UserResponseDto>) {
     Object.assign(this, partial);

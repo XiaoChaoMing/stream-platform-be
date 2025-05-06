@@ -4,7 +4,12 @@ import { UpdateVideoDto } from '../dtos/video/update-video.dto';
 
 export interface IVideoRepository {
   create(
-    data: CreateVideoDto & { view_count: number; upload_date: Date },
+    data: Omit<CreateVideoDto, 'videoFile' | 'thumbnailFile'> & { 
+      video_url: string;
+      thumbnail_url?: string;
+      view_count: number; 
+      upload_date: Date;
+    },
   ): Promise<Video>;
   update(videoId: number, data: UpdateVideoDto): Promise<Video>;
   delete(videoId: number): Promise<void>;

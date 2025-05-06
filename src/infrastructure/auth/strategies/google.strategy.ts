@@ -91,6 +91,7 @@ export class GoogleStrategy extends PassportStrategy(Strategy, 'google') {
       id: user.user_id,
       email: user.email,
       username: user.username,
+      avatar: user.avatar,
       role: user.role.role_name,
       accessToken,
     };

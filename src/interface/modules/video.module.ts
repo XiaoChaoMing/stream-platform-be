@@ -7,9 +7,10 @@ import { UpdateVideoUseCase } from 'src/core/use-cases/video/update-video.use-ca
 import { DeleteVideoUseCase } from 'src/core/use-cases/video/delete-video.use-case';
 import { IncrementViewCountGateway } from '../gateways/increment-view-count.gateway';
 import { WebSocketModule } from './websocket.module';
+import { MinioModule } from '../../infrastructure/minio/minio.module';
 
 @Module({
-  imports: [ WebSocketModule],
+  imports: [WebSocketModule, MinioModule],
   controllers: [VideoController],
   providers: [
     {

@@ -6,9 +6,11 @@ import { UserRepository } from '../repositories/user.repository';
 import { UserModule } from './user.module';
 import { UpdateProfileUseCase } from '../../core/use-cases/profile/update-profile.use-case';
 import { GetProfileUseCase } from '../../core/use-cases/profile/get-profile.use-case';
+import { ChangePasswordUseCase } from '../../core/use-cases/user/change-password.use-case';
+import { MinioModule } from 'src/infrastructure/minio/minio.module';
 
 @Module({
-  imports: [UserModule],
+  imports: [UserModule, MinioModule],
   controllers: [ProfileController],
   providers: [
     {
@@ -22,6 +24,7 @@ import { GetProfileUseCase } from '../../core/use-cases/profile/get-profile.use-
     CreateProfileUseCase,
     UpdateProfileUseCase,
     GetProfileUseCase,
+    ChangePasswordUseCase,
   ],
   exports: ['IProfileRepository', CreateProfileUseCase, UpdateProfileUseCase],
 })

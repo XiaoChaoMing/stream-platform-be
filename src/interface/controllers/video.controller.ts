@@ -9,12 +9,16 @@ import {
   UseGuards,
   ParseIntPipe,
   HttpStatus,
+  UseInterceptors,
+  UploadedFiles,
+  ValidationPipe,
 } from '@nestjs/common';
 import {
   ApiTags,
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
+  ApiConsumes,
 } from '@nestjs/swagger';
 import { JwtAuthGuard } from '../../infrastructure/auth/guards/jwt-auth.guard';
 import {
@@ -31,6 +35,8 @@ import {
   ValidationException,
   DomainException,
 } from '../../core/filters/exceptions/domain.exception';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
+import { FileFieldsInterceptor } from '@nestjs/platform-express';
 
 @ApiTags('Videos')
 @Controller('videos')
@@ -45,6 +51,13 @@ export class VideoController {
   ) {}
 
   @Post()
+  @UseInterceptors(
+    FileFieldsInterceptor([
+      { name: 'videoFile', maxCount: 1 },
+      { name: 'thumbnailFile', maxCount: 1 },
+    ])
+  )
+  @ApiConsumes('multipart/form-data')
   @ApiOperation({ summary: 'Create a new video' })
   @ApiResponse({
     status: HttpStatus.CREATED,
@@ -53,15 +66,28 @@ export class VideoController {
   })
   @ApiResponse({
     status: HttpStatus.BAD_REQUEST,
-    description: 'Invalid input data',
+    description: 'Bad request',
   })
   @ApiResponse({
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized access',
   })
   async createVideo(
-    @Body() createVideoDto: CreateVideoDto,
+    @UploadedFiles() 
+    files: { 
+      videoFile?: Express.Multer.File[],
+      thumbnailFile?: Express.Multer.File[] 
+    },
+    @Body(new ValidationPipe({ transform: true })) createVideoDto: CreateVideoDto
   ): Promise<VideoResponseDto> {
+    // Assign the uploaded files to the DTO
+    if (files.videoFile && files.videoFile.length > 0) {
+      createVideoDto.videoFile = files.videoFile[0];
+    }
+    if (files.thumbnailFile && files.thumbnailFile.length > 0) {
+      createVideoDto.thumbnailFile = files.thumbnailFile[0];
+    }
+    
     try {
       return await this.createVideoUseCase.execute(createVideoDto);
     } catch (error) {

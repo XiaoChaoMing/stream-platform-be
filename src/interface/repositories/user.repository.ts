@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { IUserRepository } from '../../core/domain/repositories.interface/user.repository.interface';
 import { User } from '../../core/domain/entities/user.entity';
 import { CreateUserDto } from '../../core/domain/dtos/user/create-user.dto';
 import { Prisma, User as PrismaUser } from '@prisma/client';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class UserRepository implements IUserRepository {
@@ -29,7 +30,7 @@ export class UserRepository implements IUserRepository {
     const user = await this.prisma.user.findUnique({
       where: { user_id },
     });
-    return user ? this.mapToDomainUser(user) : null;
+    return user 
   }
 
   async findByEmail(email: string): Promise<User | null> {
@@ -39,9 +40,16 @@ export class UserRepository implements IUserRepository {
     return user ? this.mapToDomainUser(user) : null;
   }
 
+  async findByUserName(userName: string): Promise<User | null> {
+    const user = await this.prisma.user.findUnique({
+      where: { username: userName },
+    });
+    return user;
+  }
+
   async findAll(): Promise<User[]> {
     const users = await this.prisma.user.findMany();
-    return users.map((user) => this.mapToDomainUser(user));
+    return users;
   }
 
   async update(user_id: number, data: Partial<User>): Promise<User> {
@@ -58,6 +66,35 @@ export class UserRepository implements IUserRepository {
     await this.prisma.user.delete({
       where: { user_id },
     });
+  }
+  
+  async changePassword(userId: number, oldPassword: string, newPassword: string): Promise<boolean> {
+    // Find the user
+    const user = await this.prisma.user.findUnique({
+      where: { user_id: userId },
+    });
+    
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+    // Verify old password
+    const isPasswordValid = await bcrypt.compare(oldPassword, user.password);
+    if (!isPasswordValid) {
+      throw new UnauthorizedException('Current password is incorrect');
+    }
+    
+    // Hash new password
+    const saltRounds = 10;
+    const hashedPassword = await bcrypt.hash(newPassword, saltRounds);
+    
+    // Update password
+    await this.prisma.user.update({
+      where: { user_id: userId },
+      data: { password: hashedPassword },
+    });
+    
+    return true;
   }
 
   private mapToDomainUser(prismaUser: PrismaUser): User {

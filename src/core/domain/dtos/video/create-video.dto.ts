@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsString, IsNumber, IsOptional, IsUrl, Min } from 'class-validator';
+import { IsString, IsNumber, IsOptional, Min } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateVideoDto {
   @ApiProperty({
@@ -7,6 +8,7 @@ export class CreateVideoDto {
     description: 'The unique identifier of the user who uploaded the video',
   })
   @IsNumber()
+  @Transform(({ value }) => parseInt(value, 10))
   user_id: number;
 
   @ApiProperty({
@@ -26,28 +28,19 @@ export class CreateVideoDto {
   description?: string;
 
   @ApiProperty({
-    example: 'https://example.com/videos/amazing-nature.mp4',
-    description: 'The URL of the video file',
+    type: 'string',
+    format: 'binary',
+    description: 'The video file to upload',
   })
-  @IsUrl()
-  video_url: string;
+  videoFile: Express.Multer.File;
 
   @ApiProperty({
-    example: 'https://example.com/thumbnails/amazing-nature.jpg',
-    description: 'The URL of the video thumbnail',
+    type: 'string',
+    format: 'binary',
+    description: 'The thumbnail image file to upload',
     required: false,
   })
-  @IsUrl()
   @IsOptional()
-  thumbnail_url?: string;
-
-  @ApiProperty({
-    example: 360,
-    description: 'The duration of the video in seconds',
-    required: false,
-  })
-  @IsNumber()
-  @Min(0)
-  @IsOptional()
+  thumbnailFile?: Express.Multer.File;
   duration?: number;
 }
