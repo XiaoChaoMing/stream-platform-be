@@ -10,6 +10,7 @@ import {
 } from '../../core/use-cases/chat-message';
 import { CreateChatMessageDto } from '../../core/domain/dtos/chat-message/create-chat-message.dto';
 
+
 @Injectable()
 export class ChatMessageGateway implements OnModuleInit {
   private readonly logger = new Logger(ChatMessageGateway.name);
@@ -25,31 +26,26 @@ export class ChatMessageGateway implements OnModuleInit {
   ) {}
 
   onModuleInit() {
+   
     this.subscribeToEvents();
     this.logger.log('ChatMessageGateway initialized and subscribed to events');
   }
 
-  async handleSendChatMessage(data: CreateChatMessageDto): Promise<void> {
+  async handleSendChatMessageToStreamRoom(message:CreateChatMessageDto): Promise<void> {
     try {
-      this.logger.log(
-        `Creating chat message from user ${data.user_id} to stream ${data.stream_id}`,
-      );
+      const chatMessage = await this.createChatMessageUseCase.execute(message);
 
-      // Create the chat message
-      const chatMessage = await this.createChatMessageUseCase.execute(data);
-
-      // Emit to all connected clients
-      this.socketProvider.emitToAll('chatMessageCreated', {
+      this.socketProvider.server.to(`stream_${message.stream_id}`).emit('ReciveChatMessage', {
         status: 'success',
         message: chatMessage,
         timestamp: new Date().toISOString(),
       });
     } catch (error) {
       this.logger.error(`Error creating chat message: ${error.message}`);
-      this.socketProvider.emitToAll('chatMessageCreated', {
+      this.socketProvider.server.to(`stream_${message.stream_id}`).emit('ReciveChatMessage', {
         status: 'error',
         message: 'Failed to create chat message',
-        data,
+        data: message,
       });
     }
   }
@@ -178,8 +174,8 @@ export class ChatMessageGateway implements OnModuleInit {
   subscribeToEvents(): void {
     this.socketProvider.server.on('connection', (socket) => {
       // Chat message events
-      socket.on('sendChatMessage', (data: CreateChatMessageDto) => {
-        this.handleSendChatMessage(data);
+      socket.on('sendChatMessageToStreamRoom', (message:CreateChatMessageDto) => {
+        this.handleSendChatMessageToStreamRoom(message);
       });
 
       socket.on('getStreamChatMessages', (streamId: number) => {

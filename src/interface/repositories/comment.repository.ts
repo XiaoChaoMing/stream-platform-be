@@ -23,6 +23,14 @@ export class CommentRepository implements ICommentRepository {
   async findByVideoId(video_id: number): Promise<Comment[]> {
     return this.prisma.comment.findMany({
       where: { video_id },
+      include:{
+        user: {
+          select: {
+            username: true,
+            avatar: true,
+          },
+        },
+      },
     });
   }
 

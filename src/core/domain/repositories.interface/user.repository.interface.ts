@@ -12,4 +12,6 @@ export interface IUserRepository {
   
   // New method for password change
   changePassword(userId: number, oldPassword: string, newPassword: string): Promise<boolean>;
+
+  findFollowers(userId: number): Promise<{ follower_id: number, following_id: number }[]>;
 }

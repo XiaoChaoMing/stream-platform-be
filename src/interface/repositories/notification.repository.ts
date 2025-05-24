@@ -10,7 +10,22 @@ export class NotificationRepository implements INotificationRepository {
 
   async create(data: CreateNotificationDto): Promise<Notification> {
     return this.prisma.notification.create({
-      data,
+        data: {
+            user_id: data.user_id,
+            sender_id: data.sender_id,
+            type_id: data.type_id,
+            message: data.message,
+            is_read: data.is_read,
+        },
+        include: {
+            sender: {
+              select: {
+                username: true,
+                avatar: true,
+              },
+            },
+            
+        },
     });
   }
 
@@ -20,10 +35,25 @@ export class NotificationRepository implements INotificationRepository {
     });
   }
 
-  async findByUserId(user_id: number): Promise<Notification[]> {
-    return this.prisma.notification.findMany({
+  async findByUserId(user_id: number,limit: number,page: number): Promise<{ notifications: Notification[], total: number }> {
+    const notifications = await this.prisma.notification.findMany({
+      where: { user_id },
+      include: {
+        sender: {
+          select: {
+            username: true,
+            avatar: true,
+          },
+        },
+      },
+      orderBy: { created_at: 'desc' },
+      skip: (page - 1) * limit,
+      take: limit,
+    });
+    const total = await this.prisma.notification.count({
       where: { user_id },
     });
+    return { notifications, total };
   }
 
   async findUnreadByUserId(user_id: number): Promise<Notification[]> {

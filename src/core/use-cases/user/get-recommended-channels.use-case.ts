@@ -3,6 +3,7 @@ import { IUserRepository } from '../../domain/repositories.interface/user.reposi
 import { IProfileRepository } from 'src/core/domain/repositories.interface/profile.repository.interface';
 import { ILivestreamRepository } from 'src/core/domain/repositories.interface/livestream.repository.interface';
 import { ICategoryRepository } from 'src/core/domain/repositories.interface/category.repository.interface';
+import { ISubscriptionRepository } from 'src/core/domain/repositories.interface/subscription.repository.interface';
 import { ChannelDto } from 'src/core/domain/dtos/user/channel.dto';
 
 @Injectable()
@@ -16,6 +17,8 @@ export class GetRecommendedChannelsUseCase {
     private readonly livestreamRepository: ILivestreamRepository,
     @Inject('ICategoryRepository')
     private readonly categoryRepository: ICategoryRepository,
+    @Inject('ISubscriptionRepository')
+    private readonly subscriptionRepository: ISubscriptionRepository,
   ) {}
 
   async execute(currentUserId?: number, limit: number = 10): Promise<ChannelDto[]> {
@@ -38,7 +41,8 @@ export class GetRecommendedChannelsUseCase {
     for (const user of recommendedUsers) {
       // Get profile and livestream data
       const profile = await this.profileRepository.findByUserId(user.user_id);
-      const livestreams = await this.livestreamRepository.findByUserId(user.user_id);
+      const livestream = await this.livestreamRepository.findByUserId(user.user_id);
+      const followersCount = await this.subscriptionRepository.countSubscribers(user.user_id);
       
       // Create channel object
       const channel: ChannelDto = {
@@ -49,14 +53,14 @@ export class GetRecommendedChannelsUseCase {
         role_id: user.role_id,
         stream_link: null,
         donates_link: null,
-        is_live: false,
+        livestream: null,
         tags: tags,
+        followers_count: followersCount,
       };
       
       // Add livestream data if available
-      if (livestreams && livestreams.length > 0) {
-        channel.stream_link = livestreams[0].stream_url || null;
-        channel.is_live = livestreams[0].status === "live";
+      if (livestream) {
+        channel.livestream = livestream[0];
       }
       
       // Add profile data if available

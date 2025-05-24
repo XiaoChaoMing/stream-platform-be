@@ -3,7 +3,6 @@ import { ILikeRepository } from '../../../domain/repositories.interface/like.rep
 import { CreateLikeDto } from '../../../domain/dtos/like/create-like.dto';
 import { Like } from '../../../domain/entities/like.entity';
 import {
-  EntityAlreadyExistsException,
   ValidationException,
 } from '../../../filters/exceptions/domain.exception';
 
@@ -14,7 +13,7 @@ export class CreateLikeUseCase {
     private readonly likeRepository: ILikeRepository,
   ) {}
 
-  async execute(createLikeDto: CreateLikeDto): Promise<Like> {
+  async execute(createLikeDto: CreateLikeDto): Promise<Like | void> {
     try {
       // Validate input
       this.validateInput(createLikeDto);
@@ -26,17 +25,19 @@ export class CreateLikeUseCase {
       );
 
       if (exists) {
-        throw new EntityAlreadyExistsException('Like for this video');
+        // Delete the like if it already exists
+        await this.likeRepository.deleteByUserAndVideo(
+          createLikeDto.user_id, 
+          createLikeDto.video_id
+        );
+        return;
       }
 
       // Create like
       return await this.likeRepository.create(createLikeDto);
     } catch (error) {
-      if (error instanceof EntityAlreadyExistsException) {
-        throw error;
-      }
       throw new ValidationException(
-        'Failed to create like: ' + error.message,
+        'Failed to handle like operation: ' + error.message,
         error,
       );
     }

@@ -12,7 +12,18 @@ export class ChatMessageRepository implements IChatMessageRepository {
     const chatMessage = await this.prisma.chatMessage.create({
       data,
     });
-    return chatMessage;
+    const chatResponse = await this.prisma.chatMessage.findUnique({
+      where: { message_id: chatMessage.message_id },
+      include: {
+        user: {
+          select: {
+            username: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+    return chatResponse;
   }
 
   async findById(message_id: number): Promise<ChatMessage | null> {

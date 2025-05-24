@@ -30,15 +30,18 @@ model User {
   livestreams LiveStream[]
   comments    Comment[]
   likes       Like[]
+  bankAccounts BankAccount[]
   subscriptions Subscriptions[] @relation("Subscriber")
   subscribers  Subscriptions[] @relation("SubscribedTo")
   chatMessages ChatMessage[]
   videoHistory VideoHistory[]
   deposits     Deposit[]
+  withdraw     Withdraw[]
   donationsSent Donations[] @relation("Donor")
   donationsReceived Donations[] @relation("Receiver")
   notifications Notification[] @relation("UserNotifications")
   sentNotifications Notification[] @relation("SentNotifications")
+
 }
 
 model Profile {
@@ -53,6 +56,21 @@ model Profile {
 
   user User @relation(fields: [user_id], references: [user_id], onDelete: Cascade)
 }
+
+model BankAccount {
+  id             String   @id @default(uuid())
+  user           User     @relation(fields: [user_id], references: [user_id])
+  user_id        Int
+
+  bankName       String   // Tên ngân hàng (VD: Vietcombank, Techcombank)
+  accountName    String   // Tên chủ tài khoản
+  accountNumber  String   // Số tài khoản ngân hàng
+  expiryDate     DateTime
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+}
+
 
 model Video {
   video_id     Int     @id @default(autoincrement())
@@ -91,6 +109,7 @@ model LiveStream {
 model Category {
   category_id  Int     @id @default(autoincrement())
   name        String  @unique @db.VarChar(100)
+  thumbnail_url String?  @db.VarChar(255) 
   description String?
   videos      VideoCategory[]
 }
@@ -177,7 +196,7 @@ model Deposit {
 model Donations {
   donation_id   Int     @id @default(autoincrement())
   donor_id      Int
-  receiver_id   Int
+  receiver_id   Int 
   amount        Decimal @db.Decimal(10,2)
   donation_date DateTime @default(now())
   note          String?  @db.Text
@@ -185,6 +204,18 @@ model Donations {
   donor        User   @relation("Donor", fields: [donor_id], references: [user_id])
   receiver     User   @relation("Receiver", fields: [receiver_id], references: [user_id])
 }
+
+model Withdraw {
+  id         String   @id @default(uuid()) @db.Char(36) 
+  user       User     @relation(fields: [user_id], references: [user_id])
+  user_id    Int      
+  amount     Decimal  @db.Decimal(10,2)      
+  status     String   @default("pending") // pending | success | rejected
+  createdAt  DateTime @default(now())
+  approvedAt DateTime?
+  bankInfo   String   @db.Text // Có thể là JSON string: { accountNumber, bankName }
+}
+
 
 model NotificationType {
   type_id    Int     @id @default(autoincrement())
@@ -200,7 +231,6 @@ model Notification {
   user_id         Int
   sender_id       Int?    // Nullable sender
   type_id         Int
-  related_id      Int
   message         String
   is_read         Boolean @default(false)
   created_at      DateTime @default(now())

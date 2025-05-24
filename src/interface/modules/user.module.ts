@@ -9,7 +9,14 @@ import { GetChannelByUserNameUseCase } from 'src/core/use-cases/user/get-channel
 import { GetRecommendedChannelsUseCase } from 'src/core/use-cases/user/get-recommended-channels.use-case';
 import { LivestreamRepository } from '../repositories/livestream.repository';
 import { CategoryRepository } from '../repositories/category.repository';
+import { SubscriptionModule } from './subscription.module';
+import { SubscriptionRepository } from '../repositories/subscription.repository';
+import { PrismaService } from 'src/infrastructure/prisma/prisma.service';
+
+
+
 @Module({
+  imports: [SubscriptionModule],
   controllers: [UserController],
   providers: [
     CreateUserUseCase,
@@ -32,6 +39,10 @@ import { CategoryRepository } from '../repositories/category.repository';
     {
       provide: 'ICategoryRepository',
       useClass: CategoryRepository,
+    },
+    {
+      provide: 'ISubscriptionRepository',
+      useClass: SubscriptionRepository,
     },
   ],
   exports: ['IUserRepository', CreateUserUseCase],

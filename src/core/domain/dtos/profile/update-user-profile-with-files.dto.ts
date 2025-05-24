@@ -1,23 +1,8 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsOptional, IsString, IsEmail, IsObject } from 'class-validator';
+import { IsOptional, IsString, IsObject } from 'class-validator';
 import { Transform } from 'class-transformer';
 
 export class UpdateUserProfileWithFilesDto {
-  // User fields
-  @ApiProperty({ description: 'Username', required: false })
-  @IsOptional()
-  @IsString()
-  username?: string;
-
-  @ApiProperty({ description: 'Email address', required: false })
-  @IsOptional()
-  @IsEmail()
-  email?: string;
-
-  @ApiProperty({ description: 'Avatar file (image only)',type: 'string', required: false, format: 'binary' })
-  @IsOptional()
-  avatarFile?: Express.Multer.File;
-  
   // Profile fields
   @ApiProperty({ description: 'Display name', required: false })
   @IsOptional()
@@ -29,7 +14,11 @@ export class UpdateUserProfileWithFilesDto {
   @IsString()
   description?: string;
 
-  @ApiProperty({ description: 'Banner file (image or video)',type: 'string', required: false, format: 'binary' })
+  @ApiProperty({ description: 'Avatar file (image only)', type: 'string', required: false, format: 'binary' })
+  @IsOptional()
+  avatarFile?: Express.Multer.File;
+
+  @ApiProperty({ description: 'Banner file (image or video)', type: 'string', required: false, format: 'binary' })
   @IsOptional()
   bannerFile?: Express.Multer.File;
 

@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/prisma/prisma.service';
 import { IVideoRepository } from '../../core/domain/repositories.interface/video.repository.interface';
 import { Video } from '../../core/domain/entities/video.entity';
-import { CreateVideoDto } from '../../core/domain/dtos/video/create-video.dto';
 import { UpdateVideoDto } from '../../core/domain/dtos/video/update-video.dto';
 
 @Injectable()
@@ -36,19 +35,61 @@ export class VideoRepository implements IVideoRepository {
   async findById(video_id: number): Promise<Video | null> {
     return this.prisma.video.findUnique({
       where: { video_id },
+      include: {
+        user: {
+          select: {
+            user_id: true,
+            username: true,
+            avatar: true,
+            _count: {
+              select: {
+                  subscribers:true
+              },
+            },
+            profile: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+        _count: {
+          select: {
+            likes: true,
+          }
+        },
+      },
     });
   }
 
-  async findByUserId(user_id: number): Promise<Video[]> {
+  async findByUserId(user_id: number,limit?:number,page?:number): Promise<Video[]> {
     return this.prisma.video.findMany({
       where: { user_id },
+      include: {
+        user: {
+          select: {
+            username: true,
+          },
+        },
+      },
       orderBy: { upload_date: 'desc' },
+      ...(limit ? { take: limit } : {}),
+      skip: page ? (page - 1) * limit : undefined,
     });
   }
 
-  async findAll(): Promise<Video[]> {
+  async findAll(limit?:number,page?:number): Promise<Video[]> {
     return this.prisma.video.findMany({
       orderBy: { upload_date: 'desc' },
+      include: {
+        user: {
+          select: {
+            username: true,
+          },
+        },
+      },
+      ...(limit ? { take: limit } : {}),
+      skip: page ? (page - 1) * limit : undefined,
     });
   }
 

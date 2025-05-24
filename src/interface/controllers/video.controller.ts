@@ -12,6 +12,8 @@ import {
   UseInterceptors,
   UploadedFiles,
   ValidationPipe,
+  Query,
+  Inject,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -35,8 +37,8 @@ import {
   ValidationException,
   DomainException,
 } from '../../core/filters/exceptions/domain.exception';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { NotificationGateway } from '../gateways/notification.gateway';
 
 @ApiTags('Videos')
 @Controller('videos')
@@ -48,6 +50,7 @@ export class VideoController {
     private readonly updateVideoUseCase: UpdateVideoUseCase,
     private readonly deleteVideoUseCase: DeleteVideoUseCase,
     private readonly getVideoUseCase: GetVideoUseCase,
+    private readonly notificationGateway: NotificationGateway,
   ) {}
 
   @Post()
@@ -89,7 +92,19 @@ export class VideoController {
     }
     
     try {
-      return await this.createVideoUseCase.execute(createVideoDto);
+      const result = await this.createVideoUseCase.execute(createVideoDto);
+      
+      // Send notification when video is successfully uploaded
+      const notificationData = {
+        sender_id: createVideoDto.user_id,
+        type_id: 1, // Assuming 3 is the type_id for video upload notifications
+        message: `New video uploaded: ${createVideoDto.title}`,
+      };
+      
+      // Emit socket event for notifications
+      await this.notificationGateway.handleReciveNotification(notificationData);
+      
+      return result;
     } catch (error) {
       if (error instanceof ValidationException) {
         throw error;
@@ -112,9 +127,12 @@ export class VideoController {
     status: HttpStatus.UNAUTHORIZED,
     description: 'Unauthorized access',
   })
-  async getAllVideos(): Promise<VideoResponseDto[]> {
+  async getAllVideos(
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
+    @Query('page', new ParseIntPipe({ optional: true })) page?: number,
+  ): Promise<VideoResponseDto[]> {
     try {
-      const videos = await this.getVideoUseCase.getAll();
+      const videos = await this.getVideoUseCase.getAll(limit,page);
       if (!videos || videos.length === 0) {
         throw new EntityNotFoundException('No videos found');
       }
@@ -182,9 +200,11 @@ export class VideoController {
   })
   async getVideosByUserId(
     @Param('userId', ParseIntPipe) userId: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
+    @Query('page', new ParseIntPipe({ optional: true })) page?: number,
   ): Promise<VideoResponseDto[]> {
     try {
-      const videos = await this.getVideoUseCase.getByUserId(userId);
+      const videos = await this.getVideoUseCase.getByUserId(userId,limit,page);
       if (!videos || videos.length === 0) {
         throw new EntityNotFoundException(`No videos found for user ${userId}`);
       }

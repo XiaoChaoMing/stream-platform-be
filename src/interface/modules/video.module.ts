@@ -8,7 +8,12 @@ import { DeleteVideoUseCase } from 'src/core/use-cases/video/delete-video.use-ca
 import { IncrementViewCountGateway } from '../gateways/increment-view-count.gateway';
 import { WebSocketModule } from './websocket.module';
 import { MinioModule } from '../../infrastructure/minio/minio.module';
-
+import { NotificationGateway } from '../gateways/notification.gateway';
+import { NotificationRepository } from '../repositories/notification.repository';
+import { GetFollowerUseCase } from 'src/core/use-cases/user/get-follower.use-case';
+import { CreateNotificationUseCase } from 'src/core/use-cases/notification/create-notification.use-case';
+import { FindSubscriptionsBySubscribedToUseCase } from 'src/core/use-cases/subscription/find-subscriptions-by-subscribed-to.use-case';
+import { SubscriptionRepository } from '../repositories/subscription.repository';
 @Module({
   imports: [WebSocketModule, MinioModule],
   controllers: [VideoController],
@@ -17,11 +22,22 @@ import { MinioModule } from '../../infrastructure/minio/minio.module';
       provide: 'IVideoRepository',
       useClass: VideoRepository,
     },
+    {
+      provide: 'INotificationRepository',
+      useClass: NotificationRepository,
+    },
+    {
+      provide: 'ISubscriptionRepository',
+      useClass: SubscriptionRepository,
+    },
     CreateVideoUseCase,
     GetVideoUseCase,
     UpdateVideoUseCase,
     DeleteVideoUseCase,
+    CreateNotificationUseCase,
+    FindSubscriptionsBySubscribedToUseCase,
     IncrementViewCountGateway,
+    NotificationGateway
   ],
   exports: ['IVideoRepository'],
 })

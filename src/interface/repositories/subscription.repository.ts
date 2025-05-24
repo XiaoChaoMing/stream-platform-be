@@ -23,6 +23,15 @@ export class SubscriptionRepository implements ISubscriptionRepository {
   async findBySubscriberId(subscriber_id: number): Promise<Subscription[]> {
     return this.prisma.subscriptions.findMany({
       where: { subscriber_id },
+      include: {
+        subscribedTo: {
+          select: {
+            username: true,
+            avatar: true,
+            profile: true,
+          },
+        },
+      },
     });
   }
 
@@ -30,6 +39,12 @@ export class SubscriptionRepository implements ISubscriptionRepository {
     subscribed_to_id: number,
   ): Promise<Subscription[]> {
     return this.prisma.subscriptions.findMany({
+      where: { subscribed_to_id },
+    });
+  }
+
+  async countSubscribers(subscribed_to_id: number): Promise<number> {
+    return this.prisma.subscriptions.count({
       where: { subscribed_to_id },
     });
   }
@@ -47,9 +62,14 @@ export class SubscriptionRepository implements ISubscriptionRepository {
     return !!subscription;
   }
 
-  async delete(subscription_id: number): Promise<void> {
+  async delete(createSubscriptionDto: CreateSubscriptionDto): Promise<void> {
     await this.prisma.subscriptions.delete({
-      where: { subscription_id },
+      where: {
+        subscriber_id_subscribed_to_id: {
+          subscriber_id: createSubscriptionDto.subscriber_id,
+          subscribed_to_id: createSubscriptionDto.subscribed_to_id,
+        },
+      },
     });
   }
 

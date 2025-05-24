@@ -29,6 +29,7 @@ export class LivestreamResponseDto {
   @ApiProperty({
     example: 'https://example.com/live/stream123',
     description: 'The URL where the live stream can be accessed',
+    default: '',
   })
   stream_url: string;
 

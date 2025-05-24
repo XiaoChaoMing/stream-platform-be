@@ -32,7 +32,7 @@ export class ProfileController {
   @ApiBearerAuth('JWT-auth')
   @ApiOperation({ 
     summary: 'Update user profile', 
-    description: 'Upload avatar image and/or banner image/video along with profile information' 
+    description: 'Upload avatar image and/or banner image/video along with profile information. Username and email cannot be changed.' 
   })
   @ApiConsumes('multipart/form-data')
   @ApiBody({ type: UpdateUserProfileWithFilesDto })
@@ -61,10 +61,8 @@ export class ProfileController {
       }
       
       // Convert to regular UpdateUserProfileDto to pass to use case
-      // Only include necessary properties
+      // Only include necessary properties - username and email are excluded
       const profileData: UpdateUserProfileDto = {
-        username: data.username,
-        email: data.email,
         name: data.name,
         description: data.description,
         social_links: data.social_links,

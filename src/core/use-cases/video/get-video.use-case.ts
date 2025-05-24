@@ -22,8 +22,8 @@ export class GetVideoUseCase {
     });
   }
 
-  async getAll(): Promise<VideoResponseDto[]> {
-    const videos = await this.videoRepository.findAll();
+  async getAll(limit?:number,page?:number): Promise<VideoResponseDto[]> {
+    const videos = await this.videoRepository.findAll(limit,page);
     return videos.map(
       (video) =>
         new VideoResponseDto({
@@ -33,8 +33,8 @@ export class GetVideoUseCase {
     );
   }
 
-  async getByUserId(userId: number): Promise<VideoResponseDto[]> {
-    const videos = await this.videoRepository.findByUserId(userId);
+  async getByUserId(userId: number,limit?:number,page?:number): Promise<VideoResponseDto[]> {
+    const videos = await this.videoRepository.findByUserId(userId,limit,page);
     return videos.map(
       (video) =>
         new VideoResponseDto({

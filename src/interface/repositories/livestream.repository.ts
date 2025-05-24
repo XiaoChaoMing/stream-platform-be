@@ -26,8 +26,22 @@ export class LivestreamRepository implements ILivestreamRepository {
   }
 
   async create(data: CreateLivestreamDto): Promise<LiveStream> {
+    console.log(data);
     const result = await this.prisma.liveStream.create({
       data,
+    });
+    return this.mapToLiveStream(result);
+  }
+  async startStream(data: any): Promise<LiveStream> {
+    const result = await this.prisma.liveStream.update({
+      where: { stream_id: parseInt(data.id) },
+      data: {
+        status: data.status,
+        stream_url: data.stream_url,
+        title: data.title,
+        description: data.description,
+        thumbnail_url: data.thumbnail_url,
+      },
     });
     return this.mapToLiveStream(result);
   }
@@ -42,6 +56,14 @@ export class LivestreamRepository implements ILivestreamRepository {
   async findByUserId(user_id: number): Promise<LiveStream[]> {
     const results = await this.prisma.liveStream.findMany({
       where: { user_id },
+      include: {
+        user: {
+          select: {
+            username: true,
+            avatar: true,
+          },
+        },
+      },
     });
     return results.map((result) => this.mapToLiveStream(result));
   }
@@ -109,6 +131,9 @@ export class LivestreamRepository implements ILivestreamRepository {
   }
 
   async delete(stream_id: number): Promise<void> {
+    await this.prisma.chatMessage.deleteMany({
+      where: { stream_id },
+    });
     await this.prisma.liveStream.delete({
       where: { stream_id },
     });
@@ -118,5 +143,20 @@ export class LivestreamRepository implements ILivestreamRepository {
     await this.prisma.liveStream.deleteMany({
       where: { user_id },
     });
+  }
+
+  async findAll(): Promise<LiveStream[]> {
+    const results = await this.prisma.liveStream.findMany({
+      include: {
+        user: {
+          select: {
+            user_id: true,
+            username: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+    return results.map((result) => this.mapToLiveStream(result));
   }
 }

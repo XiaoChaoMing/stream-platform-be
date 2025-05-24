@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { LivestreamResponseDto } from '../livestream/livestream-response.dto';
 
 export class ProfileDto {
   @ApiProperty({ description: 'Profile name' })
@@ -39,9 +40,12 @@ export class ChannelDto {
   @ApiProperty({ description: 'Profile information', nullable: true, type: ProfileDto })
   profile?: ProfileDto;
   
-  @ApiProperty({ description: 'Livestream status', default: false })
-  is_live?: boolean;
+  @ApiProperty({ description: 'Livestream status', default: null })
+  livestream?: LivestreamResponseDto;
 
   @ApiProperty({ description: 'Channel tags', type: [String] })
   tags?: string[];
+  
+  @ApiProperty({ description: 'Number of followers', default: 0 })
+  followers_count: number;
 } 

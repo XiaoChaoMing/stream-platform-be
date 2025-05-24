@@ -126,7 +126,7 @@ export class SubscriptionController {
     return subscriptions.map(subscription => new SubscriptionResponseDto(subscription));
   }
 
-  @Delete(':id')
+  @Delete()
   @ApiOperation({ summary: 'Delete a subscription by ID (unfollow)' })
   @ApiResponse({
     status: HttpStatus.NO_CONTENT,
@@ -141,13 +141,13 @@ export class SubscriptionController {
     description: 'Unauthorized access',
   })
   async deleteSubscription(
-    @Param('id', ParseIntPipe) id: number,
+    @Body() createSubscriptionDto: CreateSubscriptionDto,
   ): Promise<void> {
     try {
-      await this.deleteSubscriptionUseCase.execute(id);
+      await this.deleteSubscriptionUseCase.execute(createSubscriptionDto);
     } catch (error) {
       if (error.message && error.message.includes('not found')) {
-        throw new NotFoundException(`Subscription with ID ${id} not found`);
+        throw new NotFoundException(`Subscription with ID ${createSubscriptionDto} not found`);
       }
       throw error;
     }

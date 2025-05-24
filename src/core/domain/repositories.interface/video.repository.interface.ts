@@ -14,7 +14,7 @@ export interface IVideoRepository {
   update(videoId: number, data: UpdateVideoDto): Promise<Video>;
   delete(videoId: number): Promise<void>;
   findById(videoId: number): Promise<Video | null>;
-  findAll(): Promise<Video[]>;
-  findByUserId(userId: number): Promise<Video[]>;
+  findAll(limit?:number,page?:number): Promise<Video[]>;
+  findByUserId(userId: number,limit?:number,page?:number): Promise<Video[]>;
   incrementViewCount(videoId: number): Promise<void>;
 }

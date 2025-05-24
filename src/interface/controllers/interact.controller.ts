@@ -21,7 +21,6 @@ import { CreateCommentDto } from '../../core/domain/dtos/comment/create-comment.
 import {
   CreateLikeUseCase,
   GetLikesUseCase,
-  DeleteLikeUseCase,
   CreateCommentUseCase,
   UpdateCommentUseCase,
   DeleteCommentUseCase,
@@ -34,7 +33,6 @@ import {
 export class InteractController {
   constructor(
     private readonly createLikeUseCase: CreateLikeUseCase,
-    private readonly deleteLikeUseCase: DeleteLikeUseCase,
     private readonly getLikesUseCase: GetLikesUseCase,
     private readonly createCommentUseCase: CreateCommentUseCase,
     private readonly updateCommentUseCase: UpdateCommentUseCase,
@@ -54,23 +52,8 @@ export class InteractController {
     status: HttpStatus.CONFLICT,
     description: 'Like already exists',
   })
-  async createLike(@Body() createLikeDto: CreateLikeDto) {
+  async toggleLike(@Body() createLikeDto: CreateLikeDto) {
     return await this.createLikeUseCase.execute(createLikeDto);
-  }
-
-  @Delete('like/:userId/:videoId')
-  @HttpCode(HttpStatus.NO_CONTENT)
-  @ApiOperation({ summary: 'Delete a like' })
-  @ApiResponse({
-    status: HttpStatus.NO_CONTENT,
-    description: 'Like deleted successfully',
-  })
-  @ApiResponse({ status: HttpStatus.NOT_FOUND, description: 'Like not found' })
-  async deleteLike(
-    @Param('userId', ParseIntPipe) userId: number,
-    @Param('videoId', ParseIntPipe) videoId: number,
-  ) {
-    await this.deleteLikeUseCase.execute(userId, videoId);
   }
 
   @Get('likes/video/:videoId')

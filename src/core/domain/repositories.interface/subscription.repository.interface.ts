@@ -6,8 +6,9 @@ export interface ISubscriptionRepository {
   findById(id: number): Promise<Subscription | null>;
   findBySubscriberId(subscriberId: number): Promise<Subscription[]>;
   findBySubscribedToId(subscribedToId: number): Promise<Subscription[]>;
+  countSubscribers(subscribedToId: number): Promise<number>;
   exists(subscriberId: number, subscribedToId: number): Promise<boolean>;
-  delete(id: number): Promise<void>;
+  delete(createSubscriptionDto: CreateSubscriptionDto): Promise<void>;
   deleteBySubscriberAndSubscribedTo(
     subscriberId: number,
     subscribedToId: number,

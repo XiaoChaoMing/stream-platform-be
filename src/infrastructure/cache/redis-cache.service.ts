@@ -6,9 +6,11 @@ import { Cache } from 'cache-manager';
 export class RedisCacheService {
   private readonly logger = new Logger(RedisCacheService.name);
   private readonly DEFAULT_TTL = 60 * 60 * 24; // 24 hours in seconds
+  private store: any;
 
   constructor(@Inject(CACHE_MANAGER) private cacheManager: Cache) {
     this.logger.log('RedisCacheService initialized');
+    this.store = this.cacheManager.stores[0];
   }
 
   /**
@@ -17,35 +19,21 @@ export class RedisCacheService {
    */
   async checkConnection(): Promise<boolean> {
     try {
-      const redisClient = (this.cacheManager as any).store.getClient();
-      if (!redisClient) {
-        this.logger.error('Redis client not available');
-        return false;
-      }
+      // Try to set and get a test value
+      await this.set('connection-test', 'ok');
+      const result = await this.get('connection-test');
+      await this.delete('connection-test');
       
-      // Set a test value
-      const testKey = 'connection-test';
-      await this.set(testKey, 'connected');
-      
-      // Get the test value
-      const result = await this.get(testKey);
-      
-      // Delete the test key
-      await this.delete(testKey);
-      
-      if (result === 'connected') {
+      if (result === 'ok') {
         this.logger.log('Successfully connected to Redis');
         return true;
-      } else {
-        this.logger.error('Redis connection test failed');
-        return false;
       }
+      return false;
     } catch (error) {
       this.logger.error(`Redis connection error: ${error.message}`);
       return false;
     }
   }
-
 
   /**
    * Set a value in cache with optional TTL
@@ -55,7 +43,7 @@ export class RedisCacheService {
    */
   async set(key: string, value: any, ttl: number = this.DEFAULT_TTL): Promise<void> {
     try {
-      await this.cacheManager.set(key, value, ttl);
+      await this.store.set(key, value, ttl * 1000); // Convert to milliseconds
       this.logger.debug(`Cached value for key: ${key} with TTL: ${ttl}s`);
     } catch (error) {
       this.logger.error(`Error setting cache for key ${key}: ${error.message}`);
@@ -70,7 +58,7 @@ export class RedisCacheService {
    */
   async get<T>(key: string): Promise<T | null> {
     try {
-      const value = await this.cacheManager.get<T>(key);
+      const value = await this.store.get(key) as T;
       if (value) {
         this.logger.debug(`Cache hit for key: ${key}`);
       } else {
@@ -89,7 +77,7 @@ export class RedisCacheService {
    */
   async delete(key: string): Promise<void> {
     try {
-      await this.cacheManager.del(key);
+      await this.store.delete(key);
       this.logger.debug(`Deleted cache for key: ${key}`);
     } catch (error) {
       this.logger.error(`Error deleting cache for key ${key}: ${error.message}`);
@@ -98,51 +86,19 @@ export class RedisCacheService {
   }
 
   /**
-   * Invalidate cache by pattern (using Redis key pattern)
-   * @param pattern The pattern to match keys (e.g., "user:*")
+   * Clear all cache
    */
-  async invalidateByPattern(pattern: string): Promise<void> {
+  async clearAll(): Promise<void> {
     try {
-      // Access Redis client directly to use the KEYS command
-      const redisClient = (this.cacheManager as any).store.getClient();
-      if (redisClient && typeof redisClient.keys === 'function') {
-        const keys = await redisClient.keys(pattern);
-        
-        if (keys.length > 0) {
-          await Promise.all(keys.map(key => this.cacheManager.del(key)));
-          this.logger.debug(`Invalidated ${keys.length} keys matching pattern: ${pattern}`);
-        }
-      } else {
-        this.logger.warn('Redis client not available or keys method not found');
-      }
+      await this.store.clear();
+      this.logger.debug('Cache cleared successfully');
     } catch (error) {
-      this.logger.error(`Error invalidating cache by pattern ${pattern}: ${error.message}`);
+      this.logger.error(`Error clearing cache: ${error.message}`);
       throw error;
     }
   }
 
-  /**
-   * Clear all cache
-   */
-  async reset(): Promise<void> {
-    try {
-      // Check if reset method exists
-      if (typeof (this.cacheManager as any).reset === 'function') {
-        await (this.cacheManager as any).reset();
-        this.logger.debug('Cache reset successfully');
-      } else {
-        // Fallback: obtain all keys and delete them
-        const redisClient = (this.cacheManager as any).store.getClient();
-        if (redisClient && typeof redisClient.flushall === 'function') {
-          await redisClient.flushall();
-          this.logger.debug('Cache flushed successfully');
-        } else {
-          this.logger.warn('Could not reset cache, no compatible method found');
-        }
-      }
-    } catch (error) {
-      this.logger.error(`Error resetting cache: ${error.message}`);
-      throw error;
-    }
+  async del(key: string): Promise<void> {
+    await this.store.delete(key);
   }
 } 

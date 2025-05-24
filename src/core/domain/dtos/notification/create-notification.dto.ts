@@ -26,14 +26,6 @@ export class CreateNotificationDto {
   type_id: number;
 
   @ApiProperty({
-    example: 15,
-    description:
-      'The ID related to the notification (e.g., video_id, comment_id, stream_id, etc.)',
-  })
-  @IsNumber()
-  related_id: number;
-
-  @ApiProperty({
     example: 'Your video has received a new comment!',
     description: 'The content of the notification',
   })

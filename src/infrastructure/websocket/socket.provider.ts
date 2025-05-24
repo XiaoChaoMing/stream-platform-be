@@ -11,10 +11,18 @@ import {
 } from '@nestjs/websockets';
 import { WsAuthGuard } from '../auth/guards/ws-auth.guard';
 import { JwtService } from '@nestjs/jwt';
+import { RedisCacheService } from '../cache/redis-cache.service';
 
 interface ProtectedEventData {
   type: string;
   payload: Record<string, unknown>;
+}
+
+interface UserConnection {
+  userId: string;
+  socketId: string;
+  authenticated: boolean;
+  connectedAt: string;
 }
 
 @Injectable()
@@ -30,14 +38,16 @@ export class SocketProvider
   implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
   private readonly logger = new Logger(SocketProvider.name);
+  private readonly SOCKET_USER_KEY = 'socket:user:';  // For storing user -> socket mapping
+  private readonly SOCKET_CONNECTIONS_KEY = 'socket:connections';  // For storing all active connections
 
   @WebSocketServer()
   server: Server;
 
-  private connectedClients: Map<string, Socket> = new Map();
-  private authenticatedClients: Set<string> = new Set();
-
-  constructor(private readonly jwtService: JwtService) {
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly redisCacheService: RedisCacheService,
+  ) {
     this.logger.log('SocketProvider initialized');
   }
 
@@ -45,12 +55,10 @@ export class SocketProvider
     this.logger.log('WebSocket Gateway initialized');
     this.logger.log(`Server instance available: ${!!server}`);
 
-    // Add error handling
     server.on('error', (err) => {
       this.logger.error('Socket server error:', err);
     });
 
-    // Log when server starts listening
     server.on('listening', () => {
       this.logger.log('Socket server is listening');
     });
@@ -61,14 +69,18 @@ export class SocketProvider
       this.logger.log('New connection attempt...');
       this.logger.debug('Client handshake:', client.handshake);
 
+      let userId: string | undefined;
+      let authenticated = false;
+
       // Try to authenticate the client on connection
       const token = this.extractTokenFromHeader(client);
       if (token) {
         try {
           const payload = await this.jwtService.verifyAsync(token);
           client['user'] = payload;
-          this.authenticatedClients.add(client.id);
-          this.logger.log(`Client ${client.id} authenticated successfully`);
+          userId = payload.sub;
+          authenticated = true;
+          this.logger.log(`Client ${client.id} authenticated as user ${userId}`);
         } catch (authError) {
           this.logger.warn(
             `Invalid token from client ${client.id}: ${authError.message}`,
@@ -76,20 +88,47 @@ export class SocketProvider
         }
       }
 
-      // Store client connection
-      this.connectedClients.set(client.id, client);
+      // Store connection info in Redis
+      const connectionInfo: UserConnection = {
+        userId: userId || 'anonymous',
+        socketId: client.id,
+        authenticated,
+        connectedAt: new Date().toISOString(),
+      };
+
+      // Store individual connection
+      await this.redisCacheService.set(
+        `${this.SOCKET_USER_KEY}${client.id}`,
+        connectionInfo,
+      );
+
+      // Add to connections set
+      const connections = await this.getActiveConnections();
+      connections.push(connectionInfo);
+      await this.redisCacheService.set(this.SOCKET_CONNECTIONS_KEY, connections);
+
+      // If authenticated, store user's socket mapping
+      if (userId) {
+        await this.redisCacheService.set(
+          `${this.SOCKET_USER_KEY}${userId}`,
+          client.id,
+        );
+      }
 
       client.emit('connection', {
         status: 'connected',
         message: 'WebSocket connection established!',
         clientId: client.id,
-        authenticated: this.authenticatedClients.has(client.id),
+        authenticated,
       });
 
       this.logger.log(`Client connected with id: ${client.id}`);
-      this.logger.log(`Total connected clients: ${this.connectedClients.size}`);
+      const activeConnections = await this.getActiveConnections();
+      this.logger.log(`Total connected clients: ${activeConnections.length}`);
       this.logger.log(
-        `Total authenticated clients: ${this.authenticatedClients.size}`,
+        `Total authenticated clients: ${
+          activeConnections.filter((conn) => conn.authenticated).length
+        }`,
       );
     } catch (error: unknown) {
       const errorMessage =
@@ -99,19 +138,42 @@ export class SocketProvider
     }
   }
 
-  handleDisconnect(client: Socket) {
-    this.logger.log(`Client disconnected: ${client.id}`);
-    this.connectedClients.delete(client.id);
-    this.authenticatedClients.delete(client.id);
-    this.logger.log(
-      `Remaining connected clients: ${this.connectedClients.size}`,
-    );
-    this.logger.log(
-      `Remaining authenticated clients: ${this.authenticatedClients.size}`,
-    );
+  async handleDisconnect(client: Socket) {
+    try {
+      this.logger.log(`Client disconnecting: ${client.id}`);
+
+      // Remove individual connection info
+      await this.redisCacheService.delete(`${this.SOCKET_USER_KEY}${client.id}`);
+
+      // Remove from connections set
+      const connections = await this.getActiveConnections();
+      const updatedConnections = connections.filter(
+        (conn) => conn.socketId !== client.id,
+      );
+      await this.redisCacheService.set(
+        this.SOCKET_CONNECTIONS_KEY,
+        updatedConnections,
+      );
+
+      // If user was authenticated, remove user socket mapping
+      if (client['user']?.id) {
+        await this.redisCacheService.delete(
+          `${this.SOCKET_USER_KEY}${client['user'].id}`,
+        );
+      }
+
+      this.logger.log(`Client disconnected: ${client.id}`);
+      this.logger.log(`Remaining connected clients: ${updatedConnections.length}`);
+      this.logger.log(
+        `Remaining authenticated clients: ${
+          updatedConnections.filter((conn) => conn.authenticated).length
+        }`,
+      );
+    } catch (error) {
+      this.logger.error(`Error during disconnect: ${error.message}`);
+    }
   }
 
-  // Public endpoint - no auth required
   @SubscribeMessage('ping')
   handlePing(client: Socket) {
     this.logger.log(`Received ping from client: ${client.id}`);
@@ -119,11 +181,10 @@ export class SocketProvider
       status: 'ok',
       message: 'WebSocket is working!',
       timestamp: new Date().toISOString(),
-      authenticated: this.authenticatedClients.has(client.id),
+      authenticated: client['user']?.id ? true : false,
     });
   }
 
-  // Protected endpoint - requires authentication
   @UseGuards(WsAuthGuard)
   @SubscribeMessage('protected-event')
   handleProtectedEvent(
@@ -152,41 +213,66 @@ export class SocketProvider
     return type === 'Bearer' ? token : undefined;
   }
 
-  // Utility method to get all connected clients
-  getConnectedClients(): string[] {
-    return Array.from(this.connectedClients.keys());
+  private async getActiveConnections(): Promise<UserConnection[]> {
+    const connections = await this.redisCacheService.get<UserConnection[]>(
+      this.SOCKET_CONNECTIONS_KEY,
+    );
+    return connections || [];
   }
 
-  // Utility method to get all authenticated clients
-  getAuthenticatedClients(): string[] {
-    return Array.from(this.authenticatedClients);
+  async getConnectedClients(): Promise<string[]> {
+    const connections = await this.getActiveConnections();
+    return connections.map((conn) => conn.socketId);
   }
 
-  // Utility method to emit to all clients
-  emitToAll(event: string, payload: unknown): void {
+  async getAuthenticatedClients(): Promise<string[]> {
+    const connections = await this.getActiveConnections();
+    return connections
+      .filter((conn) => conn.authenticated)
+      .map((conn) => conn.socketId);
+  }
+
+  async emitToAll(event: string, payload: unknown): Promise<void> {
     this.server.emit(event, payload);
   }
 
-  // Utility method to emit to specific client
-  emitToClient(clientId: string, event: string, payload: unknown): void {
-    const client = this.connectedClients.get(clientId);
+  async emitToClient(clientId: string, event: string, payload: unknown): Promise<void> {
+    const client = this.server.sockets.sockets.get(clientId);
     if (client) {
       client.emit(event, payload);
     }
   }
 
-  // Emit only to authenticated clients
-  emitToAuthenticated(event: string, payload: unknown): void {
-    this.authenticatedClients.forEach((clientId) => {
-      const client = this.connectedClients.get(clientId);
-      if (client) {
-        client.emit(event, payload);
-      }
-    });
+  async emitToUser(userId: string, event: string, payload: unknown): Promise<void> {
+    const socketId = await this.redisCacheService.get<string>(
+      `${this.SOCKET_USER_KEY}${userId}`,
+    );
+    if (socketId) {
+      await this.emitToClient(socketId, event, payload);
+    }
   }
 
-  // Check if a client is authenticated
-  isAuthenticated(clientId: string): boolean {
-    return this.authenticatedClients.has(clientId);
+  async emitToAuthenticated(event: string, payload: unknown): Promise<void> {
+    const connections = await this.getActiveConnections();
+    const authenticatedSocketIds = connections
+      .filter((conn) => conn.authenticated)
+      .map((conn) => conn.socketId);
+
+    for (const socketId of authenticatedSocketIds) {
+      await this.emitToClient(socketId, event, payload);
+    }
+  }
+
+  async isAuthenticated(clientId: string): Promise<boolean> {
+    const connection = await this.redisCacheService.get<UserConnection>(
+      `${this.SOCKET_USER_KEY}${clientId}`,
+    );
+    return connection?.authenticated || false;
+  }
+
+  async getUserSocket(userId: string): Promise<string | null> {
+    return await this.redisCacheService.get<string>(
+      `${this.SOCKET_USER_KEY}${userId}`,
+    );
   }
 }

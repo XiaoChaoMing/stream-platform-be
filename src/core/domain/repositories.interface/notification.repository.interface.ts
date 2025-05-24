@@ -4,7 +4,7 @@ import { CreateNotificationDto } from '../dtos/notification/create-notification.
 export interface INotificationRepository {
   create(data: CreateNotificationDto): Promise<Notification>;
   findById(id: number): Promise<Notification | null>;
-  findByUserId(userId: number): Promise<Notification[]>;
+  findByUserId(userId: number,limit: number,page: number): Promise<{ notifications: Notification[], total: number }>;
   findUnreadByUserId(userId: number): Promise<Notification[]>;
   markAsRead(id: number): Promise<Notification>;
   markAllAsRead(userId: number): Promise<void>;

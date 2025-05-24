@@ -6,6 +6,7 @@ import {
   FindSubscriptionsBySubscriberUseCase,
   FindSubscriptionsBySubscribedToUseCase,
   DeleteSubscriptionUseCase,
+  CountSubscribersUseCase,
 } from '../../core/use-cases/subscription';
 
 @Module({
@@ -20,7 +21,11 @@ import {
     FindSubscriptionsBySubscriberUseCase,
     FindSubscriptionsBySubscribedToUseCase,
     DeleteSubscriptionUseCase,
+    CountSubscribersUseCase,
   ],
-  exports: ['ISubscriptionRepository'],
+  exports: [
+    'ISubscriptionRepository',
+    CountSubscribersUseCase,
+  ],
 })
 export class SubscriptionModule {}

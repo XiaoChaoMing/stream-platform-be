@@ -75,24 +75,8 @@ export class ProfileRepository implements IProfileRepository {
   }
   
   async updateUserAndProfile(userId: number, data: UpdateUserProfileDto): Promise<{ user: User; profile: Profile }> {
-    // First check if username is being updated and already exists
-    if (data.username) {
-      const existingUser = await this.prisma.user.findFirst({
-        where: {
-          username: data.username,
-          user_id: { not: userId } // Exclude current user
-        }
-      });
-      
-      if (existingUser) {
-        throw new ConflictException(`Username '${data.username}' is already taken`);
-      }
-    }
-    
-    // Extract user and profile data
+    // Extract user data - only avatar is allowed to be updated, username and email are not allowed
     const userUpdateData: Prisma.UserUpdateInput = {
-      ...(data.username !== undefined && { username: data.username }),
-      ...(data.email !== undefined && { email: data.email }),
       ...(data.avatar !== undefined && { avatar: data.avatar }),
     };
     
@@ -117,7 +101,7 @@ export class ProfileRepository implements IProfileRepository {
     
     // Use a transaction to update both user and profile
     return await this.prisma.$transaction(async (tx) => {
-      // Update user
+      // Update user - only avatar
       const updatedUser = await tx.user.update({
         where: { user_id: userId },
         data: userUpdateData,

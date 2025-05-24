@@ -38,6 +38,13 @@ export class CreateLivestreamDto {
     description: 'The URL where the live stream can be accessed',
   })
   @IsUrl()
+  thumbnail: string;
+
+  @ApiProperty({
+    example: 'https://example.com/live/stream123',
+    description: 'The URL where the live stream can be accessed',
+  })
+  @IsUrl()
   stream_url: string;
 
   @ApiProperty({

@@ -9,7 +9,7 @@ export class FindNotificationsByUserUseCase {
     private readonly notificationRepository: INotificationRepository,
   ) {}
 
-  async execute(userId: number): Promise<Notification[]> {
-    return this.notificationRepository.findByUserId(userId);
+  async execute(userId: number,limit: number,page: number): Promise<{ notifications: Notification[], total: number }> {
+    return this.notificationRepository.findByUserId(userId,limit,page);
   }
 }

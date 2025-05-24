@@ -9,6 +9,8 @@ import {
   UseGuards,
   ParseIntPipe,
   HttpStatus,
+  ParseArrayPipe,
+  Query,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -27,6 +29,7 @@ import {
   UpdateLivestreamStatusUseCase,
   DeleteLivestreamUseCase,
   DeleteAllLivestreamsByUserUseCase,
+  FindLivestreamsByFollowingUseCase,
 } from '../../core/use-cases/livestream';
 import { CreateLivestreamDto } from '../../core/domain/dtos/livestream/create-livestream.dto';
 import { LivestreamResponseDto } from '../../core/domain/dtos/livestream/livestream-response.dto';
@@ -37,6 +40,7 @@ import {
 } from '../../core/filters/exceptions/domain.exception';
 import { UpdateLivestreamDto } from 'src/core/domain/dtos/livestream/update-livestream.dto';
 import { UpdateLivestreamStatusDto } from 'src/core/domain/dtos/livestream/update-livestream-status.dto';
+import { FindAllLivestreamsUseCase } from 'src/core/use-cases/livestream/find-all-livestream.use-case';
 
 @ApiTags('Livestreams')
 @Controller('livestreams')
@@ -52,6 +56,8 @@ export class LivestreamController {
     private readonly updateLivestreamStatusUseCase: UpdateLivestreamStatusUseCase,
     private readonly deleteLivestreamUseCase: DeleteLivestreamUseCase,
     private readonly deleteAllLivestreamsByUserUseCase: DeleteAllLivestreamsByUserUseCase,
+    private readonly findLivestreamsByFollowingUseCase: FindLivestreamsByFollowingUseCase,
+    private readonly findAllLivestreamsUseCase: FindAllLivestreamsUseCase,
   ) {}
 
   @Post()
@@ -299,6 +305,77 @@ export class LivestreamController {
     } catch (error) {
       throw new DomainException(
         `Failed to delete user livestreams: ` + error.message,
+        error,
+      );
+    }
+  }
+
+  @Get('following/:userId')
+  @ApiOperation({ summary: 'Get livestreams from users the specified user is following' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Return livestreams from followed users',
+    type: [LivestreamResponseDto],
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'No livestreams found from followed users',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized access',
+  })
+  async getLivestreamsByFollowing(
+    @Param('userId', ParseIntPipe) userId: number,
+    @Query('page', ParseIntPipe) page: number,
+    @Query('status', new ParseArrayPipe({ items: String, separator: ',' })) status: 'live' | 'scheduled' | 'ended',
+  ): Promise<LivestreamResponseDto[]> {
+    try {
+      const livestreams = await this.findLivestreamsByFollowingUseCase.execute(userId,page, status);
+      if (!livestreams || livestreams.length === 0) {
+        throw new EntityNotFoundException(`No livestreams found from users followed by user ${userId}`);
+      }
+      return livestreams;
+    } catch (error) {
+      if (error instanceof EntityNotFoundException) {
+        throw error;
+      }
+      throw new DomainException(
+        `Failed to fetch livestreams from followed users: ${error.message}`,
+        error,
+      );
+    }
+  }
+
+  @Get('all')
+  @ApiOperation({ summary: 'Get all livestreams' })
+  @ApiResponse({
+    status: HttpStatus.OK,
+    description: 'Return all livestreams',
+    type: [LivestreamResponseDto],
+  })
+  @ApiResponse({
+    status: HttpStatus.NOT_FOUND,
+    description: 'No livestreams found',
+  })
+  @ApiResponse({
+    status: HttpStatus.UNAUTHORIZED,
+    description: 'Unauthorized access',
+  })
+  async getAllLivestreams(
+  ): Promise<LivestreamResponseDto[]> {
+    try {
+      const livestreams = await this.findAllLivestreamsUseCase.execute();
+      if (!livestreams || livestreams.length === 0) {
+          throw new EntityNotFoundException(`No livestreams found`);
+      }
+      return livestreams;
+    } catch (error) {
+      if (error instanceof EntityNotFoundException) {
+        throw error;
+      }
+      throw new DomainException(
+        `Failed to fetch livestreams ${error.message}`,
         error,
       );
     }

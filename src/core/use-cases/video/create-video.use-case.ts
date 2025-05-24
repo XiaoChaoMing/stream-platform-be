@@ -21,7 +21,13 @@ export class CreateVideoUseCase {
       // Automatically detect video duration if not provided
       let duration = createVideoDto.duration;
       if (duration === undefined && createVideoDto.videoFile) {
-        duration = await this.minioService.getVideoDuration(createVideoDto.videoFile);
+        try {
+          duration = await this.minioService.getVideoDuration(createVideoDto.videoFile);
+        } catch (error) {
+          console.error('Error getting video duration:', error);
+          // Set a default duration if detection fails
+          duration = 0;
+        }
       }
 
       // Upload files to MinIO
@@ -73,6 +79,15 @@ export class CreateVideoUseCase {
 
     if (!data.videoFile) {
       throw new ValidationException('Video file is required');
+    }
+
+    const maxFileSizeInBytes = 2 * 1024 * 1024 * 1024; 
+    if (data.videoFile.size > maxFileSizeInBytes) {
+      throw new ValidationException('Video file size exceeds the maximum allowed limit of 2GB');
+    }
+
+    if (data.thumbnailFile && data.thumbnailFile.size > 10 * 1024 * 1024) {
+      throw new ValidationException('Thumbnail file size exceeds the maximum allowed limit of 10MB');
     }
 
     if (data.duration !== undefined && data.duration < 0) {

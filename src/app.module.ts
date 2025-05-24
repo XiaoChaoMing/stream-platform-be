@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { AppService } from './app.service';
 import { UserModule } from './interface/modules/user.module';
 import { PrismaModule } from './infrastructure/prisma/prisma.module';
 
@@ -16,8 +15,9 @@ import { ChatMessageModule } from './interface/modules/chat-message.module';
 import { DepositModule } from './interface/modules/deposit.module';
 import { SubscriptionModule } from './interface/modules/subscription.module';
 import { MinioModule } from './infrastructure/minio/minio.module';
-
-
+import { UploadModule } from './interface/modules/upload.module';
+import { NotificationModule } from './interface/modules/notification.module';
+import { VnPayModule } from './interface/modules/vn-pay.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
@@ -29,6 +29,7 @@ import { MinioModule } from './infrastructure/minio/minio.module';
     ProfileModule,
     VideoCategoryModule,
     VideoModule,
+    NotificationModule,
     CategoryModule,
     InteractModule,
     WebSocketModule,
@@ -37,7 +38,9 @@ import { MinioModule } from './infrastructure/minio/minio.module';
     DepositModule,
     SubscriptionModule,
     MinioModule,
+    UploadModule,
+    VnPayModule
   ],
-  providers: [AppService],
+  providers: [],
 })
 export class AppModule {}

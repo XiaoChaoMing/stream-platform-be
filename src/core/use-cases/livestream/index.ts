@@ -6,3 +6,4 @@ export * from './find-live-livestreams.use-case';
 export * from './update-livestream-status.use-case';
 export * from './delete-livestream.use-case';
 export * from './delete-all-livestreams-by-user.use-case';
+export * from './find-livestreams-by-following.use-case';

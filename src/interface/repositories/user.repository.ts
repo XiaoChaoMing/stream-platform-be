@@ -97,6 +97,20 @@ export class UserRepository implements IUserRepository {
     return true;
   }
 
+  async findFollowers(userId: number): Promise<{ follower_id: number, following_id: number }[]> {
+    const followers = await this.prisma.subscriptions.findMany({
+      where: {
+        subscribed_to_id: userId
+      },
+      select: {
+        subscriber_id: true,
+        subscribed_to_id: true
+      }
+    });
+    
+    return followers.map(follow => ({ follower_id: follow.subscriber_id, following_id: follow.subscribed_to_id }));
+  }
+
   private mapToDomainUser(prismaUser: PrismaUser): User {
     return {
       user_id: prismaUser.user_id,
